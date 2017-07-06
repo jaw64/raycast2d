@@ -6,6 +6,7 @@ const float World::EPSILON = 0.001f;
 
 World::World(sf::RenderWindow *mainWindow):
     m_player(new sf::CircleShape(20.0f)),
+    m_vel(0.0f, 0.0f),
     m_window(mainWindow)
 {
     // Create the player.
@@ -14,6 +15,13 @@ World::World(sf::RenderWindow *mainWindow):
     m_player->setPosition(640.0f, 360.0f);
 
     // Create the lines.
+    // Borders:
+    //m_lines.push_back(Line(0.0f, 0.0f, 1280.0f, 0.0f));
+    //m_lines.push_back(Line(1280.0f, 720.0f, 1280.0f, 0.0f));
+    //m_lines.push_back(Line(0.0f, 720.0f, 1280.0f, 720.0f));
+    //m_lines.push_back(Line(0.0f, 0.0f, 0.0f, 720.0f));
+
+    // Walls:
     m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
     m_lines.push_back(Line(700.0f, 300.0f, 700.0f, 500.0f));
     m_lines.push_back(Line(850.0f, 350.0f, 950.0f, 450.0f));
@@ -115,21 +123,27 @@ void World::draw(sf::RenderWindow *window) {
 }
 
 void World::updatePlayer(float dt) {
-    sf::Vector2f dir(0.0f, 0.0f);
-    const float PLAYER_SPEED = 150.0f;
+    sf::Vector2f goal(0.0f, 0.0f);
+    const float PLAYER_SPEED = 200.0f;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-        dir.y -= dt * PLAYER_SPEED;
+        goal.y -= PLAYER_SPEED;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        dir.x -= dt * PLAYER_SPEED;
+        goal.x -= PLAYER_SPEED;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-        dir.y += dt * PLAYER_SPEED;
+        goal.y += PLAYER_SPEED;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        dir.x += dt * PLAYER_SPEED;
+        goal.x += PLAYER_SPEED;
     }
-    m_player->setPosition(m_player->getPosition() + dir);
+    if (goal != sf::Vector2f(0.0f, 0.0f)) {
+        goal = VectorUtils::normalize(goal) * PLAYER_SPEED;
+    }
+    float smoothing = 0.02f;
+    sf::Vector2f acc = smoothing * (goal - m_vel);
+    m_vel = m_vel + acc;
+    m_player->setPosition(m_player->getPosition() + m_vel * dt);
 }
 
 Intersection World::raycastEnvironment(const sf::Vector2f& origin, const sf::Vector2f& direction) {

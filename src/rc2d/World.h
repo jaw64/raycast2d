@@ -43,6 +43,7 @@ private:
 
     /// Instance variables.
     sf::CircleShape *m_player;
+    sf::Vector2f m_vel;
     sf::RenderWindow *m_window;
     std::vector<Line> m_lines;
 
