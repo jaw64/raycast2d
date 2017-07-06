@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="raycast2d" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option show_notes="0">
+			<notes>
+				<![CDATA[Testing 2D raycasting for visibility lighting.]]>
+			</notes>
+		</Option>
+		<Build>
+			<Target title="debug">
+				<Option output="bin/debug/raycast2d" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DSFML_STATIC" />
+					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/include" />
+				</Compiler>
+				<Linker>
+					<Add library="sfml-graphics-s-d" />
+					<Add library="sfml-window-s-d" />
+					<Add library="sfml-system-s-d" />
+					<Add library="opengl32" />
+					<Add library="freetype" />
+					<Add library="jpeg" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/lib" />
+				</Linker>
+			</Target>
+			<Target title="release">
+				<Option output="bin/release/raycast2d" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-DSFML_STATIC" />
+					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static-libgcc" />
+					<Add library="sfml-graphics-s" />
+					<Add library="sfml-window-s" />
+					<Add library="sfml-system-s" />
+					<Add library="opengl32" />
+					<Add library="freetype" />
+					<Add library="jpeg" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/rc2d/Game.cpp" />
+		<Unit filename="src/rc2d/Game.h" />
+		<Unit filename="src/rc2d/World.cpp" />
+		<Unit filename="src/rc2d/World.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
