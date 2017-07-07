@@ -1,5 +1,6 @@
 #include "Line.h"
 #include <SFML/Graphics.hpp>
+#include "../VectorUtils.h"
 
 Line::Line()
 {
@@ -55,8 +56,26 @@ Intersection Line::castRay(const sf::Vector2f& origin, const sf::Vector2f& direc
         }
         // Intersection is in front of ray.
         if (t >= 0.0f) {
+            // Calculate intersection point.
             isect.point = p1 + ((p2 - p1) * s);
             isect.exists = true;
+
+            // Calculate normal.
+            sf::Vector2f norm1(-bymay, bxmax);
+            sf::Vector2f norm2(bymay, -bxmax);
+            sf::Vector2f tp = p1 + norm1; // test point
+            float testSide = (tp.x - ax) * bymay - (tp.y - ay) * bxmax;
+            float side = (px - ax) * bymay - (py - ay) * bxmax;
+            if (side == 0.0f) {
+                isect.normal = VectorUtils::normalize(p2 - p1);
+            } else {
+                bool sameSide = side * testSide > 0.0f;
+                if (sameSide) {
+                    isect.normal = VectorUtils::normalize(norm1);
+                } else {
+                    isect.normal = VectorUtils::normalize(norm2);
+                }
+            }
         }
     }
     return isect;

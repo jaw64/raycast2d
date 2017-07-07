@@ -91,20 +91,30 @@ void World::draw(sf::RenderWindow *window) {
         if (isect1.exists) {
             cs.setPosition(isect1.point);
             Line(origin, isect1.point).draw(window);
+            Line(isect1.point, isect1.point + isect1.normal * 25.0f).draw(window);
             window->draw(cs);
+            cs.setPosition(isect1.point + isect1.normal * 25.0f);
+            cs.setFillColor(sf::Color::Cyan);
+            window->draw(cs);
+            cs.setFillColor(sf::Color::Red);
         } else {
             Line(origin, origin + dir1 * 2000.0f).draw(window);
         }
         if (isect2.exists) {
             cs.setPosition(isect2.point);
             Line(origin, isect2.point).draw(window);
+            Line(isect2.point, isect2.point + isect2.normal * 25.0f).draw(window);
             window->draw(cs);
+            cs.setPosition(isect2.point + isect2.normal * 25.0f);
+            cs.setFillColor(sf::Color::Cyan);
+            window->draw(cs);
+            cs.setFillColor(sf::Color::Red);
         } else {
             Line(origin, origin + dir2 * 2000.0f).draw(window);
         }
     }
 
-    // Draw intersection points.
+    // Draw aiming intersection points (with mouse).
     sf::Vector2f dir = VectorUtils::normalize(mp - origin);
     Intersection isect = raycastEnvironment(origin, dir);
     if (isect.exists) {
@@ -113,7 +123,12 @@ void World::draw(sf::RenderWindow *window) {
         cs.setFillColor(sf::Color::Yellow);
         cs.setPosition(isect.point);
         Line(origin, isect.point).draw(window);
+        Line(isect.point, isect.point + isect.normal * 25.0f).draw(window);
         window->draw(cs);
+        cs.setPosition(isect.point + isect.normal * 25.0f);
+        cs.setFillColor(sf::Color::Cyan);
+        window->draw(cs);
+        cs.setFillColor(sf::Color::Red);
     } else {
         Line(origin, origin + dir * 2000.0f).draw(window);
     }
