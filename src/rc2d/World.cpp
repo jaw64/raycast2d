@@ -1,8 +1,11 @@
 #include "World.h"
 #include "../VectorUtils.h"
-#include <SFML/Graphics.hpp>
+#include <iostream>
 
-const float World::EPSILON = 0.001f;
+const float World::EPSILON = 0.1f;
+const float World::VIEW_DISTANCE = 2000.0f;
+const float World::VIEW_DISTANCE_2 = World::VIEW_DISTANCE * World::VIEW_DISTANCE;
+const float World::VIEW_ANGLE = 90.0f;
 
 World::World(sf::RenderWindow *mainWindow):
     m_player(new sf::CircleShape(20.0f)),
@@ -16,10 +19,10 @@ World::World(sf::RenderWindow *mainWindow):
 
     // Create the lines.
     // Borders:
-    //m_lines.push_back(Line(0.0f, 0.0f, 1280.0f, 0.0f));
-    //m_lines.push_back(Line(1280.0f, 720.0f, 1280.0f, 0.0f));
-    //m_lines.push_back(Line(0.0f, 720.0f, 1280.0f, 720.0f));
-    //m_lines.push_back(Line(0.0f, 0.0f, 0.0f, 720.0f));
+    m_lines.push_back(Line(0.0f, 0.0f, 1280.0f, 0.0f));
+    m_lines.push_back(Line(1280.0f, 720.0f, 1280.0f, 0.0f));
+    m_lines.push_back(Line(0.0f, 720.0f, 1280.0f, 720.0f));
+    m_lines.push_back(Line(0.0f, 0.0f, 0.0f, 720.0f));
 
     // Walls:
     m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
@@ -44,94 +47,84 @@ void World::draw(sf::RenderWindow *window) {
     // Draw the environment.
     for (unsigned int i=0; i < m_lines.size(); i++) {
         Line l = m_lines[i];
-        l.draw(window);
+        //l.draw(window, sf::Color::Black);
     }
 
-    // Draws green squares for where to cast rays.
+    // Get the direction of the mouse and player.
+    sf::Vector2f pp = m_player->getPosition();
+    sf::Vector2f mp = sf::Vector2f(sf::Mouse::getPosition(*window));
+    sf::Vector2f mousedir = mp - pp;
+    float mouseAngle = std::atan2(mousedir.y, mousedir.x);
+    mousedir = VectorUtils::normalize(mousedir);
+
+    // Get the list of points to cast from the lines.
+    std::vector<sf::Vector2f> points;
     for (unsigned int i=0; i < m_lines.size(); i++) {
-        Line cl = m_lines[i]; // the current line being raycasted
-        sf::Vector2f p1 = cl.p1;
-        sf::Vector2f p2 = cl.p2;
-        p1 = p1 + (VectorUtils::normalize(p1 - p2) * EPSILON);
-        p2 = p2 + (VectorUtils::normalize(p2 - p1) * EPSILON);
-        sf::CircleShape cs(4.0f, 4);
-        cs.setOrigin(4.0f, 4.0f);
-        cs.setFillColor(sf::Color::Green);
-        cs.setPosition(p1);
-        window->draw(cs);
-        cs.setPosition(p2);
-        window->draw(cs);
-    }
-
-    // Get player position and mouse position.
-    sf::Vector2f origin = m_player->getPosition();
-    sf::Vector2f mp(sf::Mouse::getPosition(*window));
-
-    // Raycast the entire environment.
-    // Get the directions to send rays.
-    for (unsigned int i=0; i < m_lines.size(); i++) {
-        Line il = m_lines[i];
-        sf::Vector2f p1 = il.p1;
-        sf::Vector2f p2 = il.p2;
-        p1 = p1 + (VectorUtils::normalize(p1 - p2) * EPSILON);
-        p2 = p2 + (VectorUtils::normalize(p2 - p1) * EPSILON);
-        sf::Vector2f dir1 = VectorUtils::normalize(p1 - origin); // cast ray in this direction
-        sf::Vector2f dir2 = VectorUtils::normalize(p2 - origin); // cast ray in this direction
-
-        // Actually cast the rays.
-        Intersection isect1 = raycastEnvironment(origin, dir1);
-        Intersection isect2 = raycastEnvironment(origin, dir2);
-
-        // Graphics stuff.
-        sf::CircleShape cs(4.0f);
-        cs.setOrigin(4.0f, 4.0f);
-        cs.setFillColor(sf::Color::Red);
-
-        // Draw the intersections.
-        if (isect1.exists) {
-            cs.setPosition(isect1.point);
-            Line(origin, isect1.point).draw(window);
-            Line(isect1.point, isect1.point + isect1.normal * 25.0f).draw(window);
-            window->draw(cs);
-            cs.setPosition(isect1.point + isect1.normal * 25.0f);
-            cs.setFillColor(sf::Color::Cyan);
-            window->draw(cs);
-            cs.setFillColor(sf::Color::Red);
-        } else {
-            Line(origin, origin + dir1 * 2000.0f).draw(window);
-        }
-        if (isect2.exists) {
-            cs.setPosition(isect2.point);
-            Line(origin, isect2.point).draw(window);
-            Line(isect2.point, isect2.point + isect2.normal * 25.0f).draw(window);
-            window->draw(cs);
-            cs.setPosition(isect2.point + isect2.normal * 25.0f);
-            cs.setFillColor(sf::Color::Cyan);
-            window->draw(cs);
-            cs.setFillColor(sf::Color::Red);
-        } else {
-            Line(origin, origin + dir2 * 2000.0f).draw(window);
+        std::vector<sf::Vector2f> p(4, sf::Vector2f(0.0f, 0.0f));
+        sf::Vector2f p1 = m_lines[i].p1;
+        sf::Vector2f p2 = m_lines[i].p2;
+        p[0] = p1 + VectorUtils::normalize(p2 - p1) * EPSILON;
+        p[1] = p2 + VectorUtils::normalize(p1 - p2) * EPSILON;
+        p[2] = p1 + VectorUtils::normalize(p1 - p2) * EPSILON;
+        p[3] = p2 + VectorUtils::normalize(p2 - p1) * EPSILON;
+        const int psize = static_cast<int>(p.size());
+        for (int j=-1; j <= psize; j++) {
+            sf::Vector2f toAdd;
+            if (j < 0 || j >= psize) {
+                // [TODO]: Do the angle VIEW_ANGLE/2 degrees less.
+                float vangle = VIEW_ANGLE * M_PI / 360.0f;
+                float angle = j < 0 ? mouseAngle - vangle : mouseAngle + vangle;
+                float dx = std::cos(angle);
+                float dy = std::sin(angle);
+                toAdd = sf::Vector2f(pp + sf::Vector2f(dx, dy));
+                continue; // [TODO]: REMOVE
+            } else {
+                toAdd = p[j];
+            }
+            float ata = std::atan2(toAdd.y - pp.y, toAdd.x - pp.x); // angle to add
+            if (!angleInView(mouseAngle, ata)) {
+                //continue; [TODO]: REMOVE
+            }
+            if (points.empty()) {
+                points.push_back(toAdd);
+            } else {
+                for (unsigned int k=0; k <= points.size(); k++) {
+                    if (k == points.size()) {
+                        points.push_back(toAdd);
+                        break;
+                    }
+                    sf::Vector2f toComp = points[k];
+                    float atc = std::atan2(toComp.y - pp.y, toComp.x - pp.x); // angle to compare
+                    if (ata <= atc) {
+                        points.insert(points.begin() + k, toAdd);
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    // Draw aiming intersection points (with mouse).
-    sf::Vector2f dir = VectorUtils::normalize(mp - origin);
-    Intersection isect = raycastEnvironment(origin, dir);
-    if (isect.exists) {
-        sf::CircleShape cs(4.0f);
-        cs.setOrigin(4.0f, 4.0f);
-        cs.setFillColor(sf::Color::Yellow);
-        cs.setPosition(isect.point);
-        Line(origin, isect.point).draw(window);
-        Line(isect.point, isect.point + isect.normal * 25.0f).draw(window);
-        window->draw(cs);
-        cs.setPosition(isect.point + isect.normal * 25.0f);
-        cs.setFillColor(sf::Color::Cyan);
-        window->draw(cs);
-        cs.setFillColor(sf::Color::Red);
-    } else {
-        Line(origin, origin + dir * 2000.0f).draw(window);
+    // Draw the points in order:
+    sf::VertexArray vao;
+    vao.setPrimitiveType(sf::TriangleFan);
+    sf::Color lightColor(0x66, 0x66, 0x66);
+    vao.append(sf::Vertex(pp, lightColor));
+    for (unsigned int i=0; i <= points.size(); i++) {
+        int index = i;
+        if (i == points.size()) index = 0;
+        if (points.size() == 0) break;
+        sf::Vector2f point = points[index];
+        sf::Vector2f dir = VectorUtils::normalize(point - pp);
+        Intersection isect = raycastEnvironment(pp, dir);
+        sf::Vector2f ip;
+        if (isect.exists && VectorUtils::distance2(isect.point, pp) <= VIEW_DISTANCE_2) {
+            ip = isect.point;
+        } else {
+            ip = pp + dir * VIEW_DISTANCE;
+        }
+        vao.append(sf::Vertex(ip, lightColor));
     }
+    window->draw(vao);
 
     // Draw the player.
     window->draw(*m_player);
@@ -176,4 +169,24 @@ Intersection World::raycastEnvironment(const sf::Vector2f& origin, const sf::Vec
         }
     }
     return best;
+}
+
+bool World::angleInView(float mouseAngle, float testAngle) const {
+    mouseAngle += M_PI;
+    testAngle += M_PI;
+    float hangle = VIEW_ANGLE * M_PI / 360.0f; // half-angle
+    float langle = mouseAngle - hangle; // low-angle
+    float tangle = mouseAngle + hangle; // high-angle
+    const float PI_2 = M_PI * 2.0f;
+    if (langle < 0.0f) {
+        float dangle = -langle;
+        tangle += dangle;
+        langle = 0.0f;
+    }
+    if (tangle > PI_2) {
+        float dangle = tangle - PI_2;
+        langle -= dangle;
+        tangle = PI_2;
+    }
+    return testAngle <= tangle && testAngle >= langle;
 }

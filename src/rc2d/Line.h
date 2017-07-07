@@ -1,12 +1,8 @@
 #ifndef RC2D_LINE_H
 #define RC2D_LINE_H
 
-#include <SFML/System.hpp>
 #include "Intersection.h"
-
-namespace sf {
-    class RenderWindow;
-}
+#include <SFML/Graphics.hpp>
 
 /**
  * Class that represents a line segment.
@@ -23,7 +19,7 @@ public:
     /**
      * \brief (constructor) Creates a new Line object.
      */
-    Line(sf::Vector2f endp1, sf::Vector2f endp2);
+    Line(const sf::Vector2f& endp1, const sf::Vector2f& endp2);
 
     /**
      * \brief (constructor) Creates a new Line object.
@@ -38,7 +34,7 @@ public:
     /**
      * \brief Draws the line.
      */
-    virtual void draw(sf::RenderWindow *window) const;
+    virtual void draw(sf::RenderWindow *window, const sf::Color& color) const;
 
     /**
      * \brief Casts a ray to this line segment. Returns an intersection

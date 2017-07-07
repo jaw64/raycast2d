@@ -1,12 +1,11 @@
 #include "Line.h"
-#include <SFML/Graphics.hpp>
 #include "../VectorUtils.h"
 
 Line::Line()
 {
 }
 
-Line::Line(sf::Vector2f endp1, sf::Vector2f endp2):
+Line::Line(const sf::Vector2f& endp1, const sf::Vector2f& endp2):
     p1(endp1),
     p2(endp2)
 {
@@ -22,11 +21,8 @@ Line::~Line()
 {
 }
 
-void Line::draw(sf::RenderWindow *window) const {
-    sf::Vertex line[] = {
-        sf::Vertex(p1),
-        sf::Vertex(p2)
-    };
+void Line::draw(sf::RenderWindow *window, const sf::Color& color) const {
+    sf::Vertex line[] = { sf::Vertex(p1, color), sf::Vertex(p2, color) };
     window->draw(line, 2, sf::Lines);
 }
 

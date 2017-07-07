@@ -1,6 +1,8 @@
 #ifndef RC2D_INTERSECTION_H
 #define RC2D_INTERSECTION_H
 
+#include <SFML/System.hpp>
+
 struct Intersection {
     Intersection() : point(0.0f, 0.0f), normal(0.0f, 0.0f), exists(false) {}
     sf::Vector2f point;

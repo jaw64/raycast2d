@@ -1,5 +1,4 @@
 #include "Game.h"
-#include <iostream>
 
 const int Game::WIDTH = 1280;
 const int Game::HEIGHT = 720;

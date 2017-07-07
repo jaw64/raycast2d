@@ -4,10 +4,6 @@
 #include "Line.h"
 #include <vector>
 
-namespace sf {
-    class CircleShape;
-}
-
 /**
  * The world where raycasting takes place.
  */
@@ -40,6 +36,7 @@ private:
     /// Helper functions.
     void updatePlayer(float dt);
     Intersection raycastEnvironment(const sf::Vector2f& origin, const sf::Vector2f& direction);
+    bool angleInView(float mouseAngle, float testAngle) const;
 
     /// Instance variables.
     sf::CircleShape *m_player;
@@ -48,7 +45,7 @@ private:
     std::vector<Line> m_lines;
 
     /// Static constants:
-    static const float EPSILON;
+    static const float EPSILON, VIEW_DISTANCE, VIEW_DISTANCE_2, VIEW_ANGLE;
 
 };
 
