@@ -1,4 +1,3 @@
-#include <SFML/Graphics.hpp>
 #include "rc2d/Game.h"
 
 /**\brief Entry point of the program.

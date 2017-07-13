@@ -1,11 +1,11 @@
 #include "Line.h"
-#include <SFML/Graphics.hpp>
+#include "../VectorUtils.h"
 
 Line::Line()
 {
 }
 
-Line::Line(sf::Vector2f endp1, sf::Vector2f endp2):
+Line::Line(const sf::Vector2f& endp1, const sf::Vector2f& endp2):
     p1(endp1),
     p2(endp2)
 {
@@ -21,11 +21,8 @@ Line::~Line()
 {
 }
 
-void Line::draw(sf::RenderWindow *window) const {
-    sf::Vertex line[] = {
-        sf::Vertex(p1),
-        sf::Vertex(p2)
-    };
+void Line::draw(sf::RenderWindow *window, const sf::Color& color) const {
+    sf::Vertex line[] = { sf::Vertex(p1, color), sf::Vertex(p2, color) };
     window->draw(line, 2, sf::Lines);
 }
 
@@ -55,8 +52,26 @@ Intersection Line::castRay(const sf::Vector2f& origin, const sf::Vector2f& direc
         }
         // Intersection is in front of ray.
         if (t >= 0.0f) {
+            // Calculate intersection point.
             isect.point = p1 + ((p2 - p1) * s);
             isect.exists = true;
+
+            // Calculate normal.
+            sf::Vector2f norm1(-bymay, bxmax);
+            sf::Vector2f norm2(bymay, -bxmax);
+            sf::Vector2f tp = p1 + norm1; // test point
+            float testSide = (tp.x - ax) * bymay - (tp.y - ay) * bxmax;
+            float side = (px - ax) * bymay - (py - ay) * bxmax;
+            if (side == 0.0f) {
+                isect.normal = VectorUtils::normalize(p2 - p1);
+            } else {
+                bool sameSide = side * testSide > 0.0f;
+                if (sameSide) {
+                    isect.normal = VectorUtils::normalize(norm1);
+                } else {
+                    isect.normal = VectorUtils::normalize(norm2);
+                }
+            }
         }
     }
     return isect;

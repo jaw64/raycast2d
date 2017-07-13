@@ -9,6 +9,16 @@ class VectorUtils {
 public:
 
     /**
+     * \brief Computes the dot product between two vectors.
+     * \param v1 the first vector
+     * \param v2 the second vector
+     * \return the dot product between the two specified vectors
+     */
+    static float dot(const sf::Vector2f& v1, const sf::Vector2f& v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+
+    /**
      * \brief Normalizes 2D vectors.
      * \param vec the vector to normalize
      * \return the normalized vector

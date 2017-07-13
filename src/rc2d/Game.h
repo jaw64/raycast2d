@@ -1,7 +1,7 @@
 #ifndef RC2D_GAME_H
 #define RC2D_GAME_H
+
 #include "World.h"
-#include <SFML/Graphics.hpp>
 
 /**
  * This is the class holding the entire "game".

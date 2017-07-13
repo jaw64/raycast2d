@@ -19,7 +19,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DSFML_STATIC" />
-					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/include" />
+					<Add directory="../../lib/sfml/include" />
 				</Compiler>
 				<Linker>
 					<Add library="sfml-graphics-s-d" />
@@ -30,7 +30,7 @@
 					<Add library="jpeg" />
 					<Add library="winmm" />
 					<Add library="gdi32" />
-					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/lib" />
+					<Add directory="../../lib/sfml/lib" />
 				</Linker>
 			</Target>
 			<Target title="release">
@@ -41,11 +41,10 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-DSFML_STATIC" />
-					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/include" />
+					<Add directory="../../lib/sfml/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="-static-libgcc" />
 					<Add library="sfml-graphics-s" />
 					<Add library="sfml-window-s" />
 					<Add library="sfml-system-s" />
@@ -54,16 +53,20 @@
 					<Add library="jpeg" />
 					<Add library="winmm" />
 					<Add library="gdi32" />
-					<Add directory="C:/cygwin/home/e338758/games/lib/SFML-2.4.2/lib" />
+					<Add directory="../../lib/sfml/lib" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="src/VectorUtils.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/rc2d/Game.cpp" />
 		<Unit filename="src/rc2d/Game.h" />
+		<Unit filename="src/rc2d/Intersection.h" />
+		<Unit filename="src/rc2d/Line.cpp" />
+		<Unit filename="src/rc2d/Line.h" />
 		<Unit filename="src/rc2d/World.cpp" />
 		<Unit filename="src/rc2d/World.h" />
 		<Extensions>
