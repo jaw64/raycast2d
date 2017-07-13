@@ -51,6 +51,26 @@ public:
         float ycom = v1.y - v2.y;
         return xcom * xcom + ycom * ycom;
     }
+
+    /**
+     * \brief Gets a test vector's orientation with respect to a reference vector.
+     * \param r the reference vector
+     * \param t the test vector
+     * \return 1 if t is clockwise from r, -1 if anticlockwise, and 0 if parallel
+     */
+    static int side(const sf::Vector2f& r, const sf::Vector2f& t) {
+        float v1yv2x = r.y * t.x;
+        float v1xv2y = r.x * t.y;
+        if (v1yv2x > v1xv2y) {
+            return 1;
+        }
+        else if (v1yv2x < v1xv2y) {
+            return -1;
+        }
+        else {
+            return 0;
+        }
+    }
 };
 
 #endif // VECTORUTILS_H
