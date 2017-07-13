@@ -26,6 +26,11 @@
 *.a
 *.lib
 
+# Code::Blocks IDE files
+*.cbp
+*.layout
+*.depend
+
 # Executables
 *.exe
 *.out
