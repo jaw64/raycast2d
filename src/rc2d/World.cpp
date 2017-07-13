@@ -185,3 +185,23 @@ Intersection World::raycastEnvironment(const sf::Vector2f& origin, const sf::Vec
     }
     return best;
 }
+
+bool World::angleInView(float mouseAngle, float testAngle) const {
+    mouseAngle += M_PI;
+    testAngle += M_PI;
+    float hangle = VIEW_ANGLE * M_PI / 360.0f; // half-angle
+    float langle = mouseAngle - hangle; // low-angle
+    float tangle = mouseAngle + hangle; // high-angle
+    const float PI_2 = M_PI * 2.0f;
+    if (langle < 0.0f) {
+        float dangle = -langle;
+        tangle += dangle;
+        langle = 0.0f;
+    }
+    if (tangle > PI_2) {
+        float dangle = tangle - PI_2;
+        langle -= dangle;
+        tangle = PI_2;
+    }
+    return testAngle <= tangle && testAngle >= langle;
+}
