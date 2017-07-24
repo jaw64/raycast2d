@@ -3,7 +3,7 @@
 #include <iostream>
 
 const float World::EPSILON = 0.08f;
-const float World::VIEW_DISTANCE = 2000.0f;
+const float World::VIEW_DISTANCE = 400.0f;
 const float World::VIEW_DISTANCE_2 = World::VIEW_DISTANCE * World::VIEW_DISTANCE;
 const float World::VIEW_ANGLE = 90.0f;
 
@@ -25,12 +25,20 @@ World::World(sf::RenderWindow *mainWindow):
     m_lines.push_back(Line(0.0f, 0.0f, 0.0f, 720.0f));
 
     // Walls:
-    m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
-    m_lines.push_back(Line(700.0f, 300.0f, 700.0f, 500.0f));
-    m_lines.push_back(Line(850.0f, 350.0f, 950.0f, 450.0f));
-    m_lines.push_back(Line(450.0f, 600.0f, 400.0f, 500.0f));
-    m_lines.push_back(Line(500.0f, 450.0f, 650.0f, 550.0f));
-    m_lines.push_back(Line(700.0f, 200.0f, 850.0f, 300.0f));
+    srand(time(NULL));
+    for (int i = 0; i < 10; i++) {
+        float x1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
+        float x2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
+        float y1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
+        float y2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
+        m_lines.push_back(Line(x1, y1, x2, y2));
+    }
+    //m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
+    //m_lines.push_back(Line(700.0f, 300.0f, 700.0f, 500.0f));
+    //m_lines.push_back(Line(850.0f, 350.0f, 950.0f, 450.0f));
+    //m_lines.push_back(Line(450.0f, 600.0f, 400.0f, 500.0f));
+    //m_lines.push_back(Line(500.0f, 450.0f, 650.0f, 550.0f));
+    //m_lines.push_back(Line(700.0f, 200.0f, 850.0f, 300.0f));
 }
 
 World::~World()
@@ -47,7 +55,7 @@ void World::draw(sf::RenderWindow *window) {
     // Draw the environment.
     for (unsigned int i=0; i < m_lines.size(); i++) {
         Line l = m_lines[i];
-        l.draw(window, sf::Color::White);
+        //l.draw(window, sf::Color::White);
     }
 
     // Get the direction of the mouse and player.
@@ -58,14 +66,23 @@ void World::draw(sf::RenderWindow *window) {
 
     // Get the list of points to cast from the lines.
     std::vector<sf::Vector2f> points;
-    // Get left angle:
-    float darad = VIEW_ANGLE * M_PI / 360.0f;
-    float leftAngle = mouseAngle - darad;
-    float rightAngle = mouseAngle + darad;
-    sf::Vector2f leftDir = sf::Vector2f(std::cos(leftAngle), std::sin(leftAngle));
-    sf::Vector2f rightDir = sf::Vector2f(std::cos(rightAngle), std::sin(rightAngle));
-    points.push_back(pp + leftDir);
-    points.push_back(pp + rightDir);
+
+    // Cast many rays in the direction the player is facing:
+    const float darad = VIEW_ANGLE * M_PI / 360.0f;
+    const float leftAngle = mouseAngle - darad;
+    const float rightAngle = mouseAngle + darad;
+    const int slices = 180;
+    const float da = VIEW_ANGLE * M_PI / (180.0f * static_cast<float>(slices));
+    for (float currAngle = leftAngle; currAngle < rightAngle; currAngle += da) {
+        sf::Vector2f dir = sf::Vector2f(std::cos(currAngle), std::sin(currAngle));
+        points.push_back(pp + dir);
+        if (currAngle + da >= rightAngle) {
+            dir = sf::Vector2f(std::cos(rightAngle), std::sin(rightAngle));
+            points.push_back(pp + dir);
+        }
+    }
+
+    // Cast rays toward line endpoints.
     for (unsigned int i=0; i < m_lines.size(); i++) {
         std::vector<sf::Vector2f> p(4, sf::Vector2f(0.0f, 0.0f));
         sf::Vector2f p1 = m_lines[i].p1;
@@ -113,7 +130,11 @@ void World::draw(sf::RenderWindow *window) {
         Intersection isect = raycastEnvironment(pp, dir);
         sf::Vector2f ip;
         if (isect.exists) {
-            ip = isect.point;
+            if (VectorUtils::distance2(pp, isect.point) > VIEW_DISTANCE_2) {
+                ip = pp + dir * VIEW_DISTANCE;
+            } else {
+                ip = isect.point;
+            }
         } else {
             ip = pp + dir * VIEW_DISTANCE;
         }
