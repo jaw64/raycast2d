@@ -1,17 +1,39 @@
 #include "World.h"
+#include "Game.h"
 #include "../VectorUtils.h"
 #include <iostream>
 
 const float World::EPSILON = 0.08f;
-const float World::VIEW_DISTANCE = 400.0f;
+const float World::VIEW_DISTANCE = 450.0f;
 const float World::VIEW_DISTANCE_2 = World::VIEW_DISTANCE * World::VIEW_DISTANCE;
 const float World::VIEW_ANGLE = 90.0f;
 
 World::World(sf::RenderWindow *mainWindow):
     m_player(new sf::CircleShape(20.0f)),
+    m_floor(new sf::Sprite()),
+    m_floortex(new sf::Texture()),
+    m_shader(new sf::Shader()),
+    m_rt(new sf::RenderTexture()),
     m_vel(0.0f, 0.0f),
     m_window(mainWindow)
 {
+    // Load shader:
+    if (!m_shader->loadFromFile("src/shaders/mask.frag", sf::Shader::Fragment)) {
+        std::cerr << "[ERROR]: Could not load shader." << std::endl;
+    }
+
+    // Load render texture for sprite:
+    if (!m_rt->create(Game::WIDTH, Game::HEIGHT)) {
+        std::cerr << "[ERROR]: Could not create render texture." << std::endl;
+    }
+    m_rt->setSmooth(true);
+
+    // Create the floor sprite.
+    if (!m_floortex->loadFromFile("res/floor.png")) {
+        std::cerr << "[ERROR]: Could not load floor.png." << std::endl;
+    }
+    m_floor->setTexture(*m_floortex);
+
     // Create the player.
     m_player->setFillColor(sf::Color::Red);
     m_player->setOrigin(m_player->getRadius(), m_player->getRadius());
@@ -25,25 +47,29 @@ World::World(sf::RenderWindow *mainWindow):
     m_lines.push_back(Line(0.0f, 0.0f, 0.0f, 720.0f));
 
     // Walls:
-    srand(time(NULL));
-    for (int i = 0; i < 10; i++) {
-        float x1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
-        float x2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
-        float y1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
-        float y2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
-        m_lines.push_back(Line(x1, y1, x2, y2));
-    }
-    //m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
-    //m_lines.push_back(Line(700.0f, 300.0f, 700.0f, 500.0f));
-    //m_lines.push_back(Line(850.0f, 350.0f, 950.0f, 450.0f));
-    //m_lines.push_back(Line(450.0f, 600.0f, 400.0f, 500.0f));
-    //m_lines.push_back(Line(500.0f, 450.0f, 650.0f, 550.0f));
-    //m_lines.push_back(Line(700.0f, 200.0f, 850.0f, 300.0f));
+    //srand(time(NULL));
+    //for (int i = 0; i < 10; i++) {
+    //    float x1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
+    //    float x2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 1280.0f;
+    //    float y1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
+    //    float y2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 720.0f;
+    //    m_lines.push_back(Line(x1, y1, x2, y2));
+    //}
+    m_lines.push_back(Line(300.0f, 250.0f, 500.0f, 100.0f));
+    m_lines.push_back(Line(700.0f, 300.0f, 700.0f, 500.0f));
+    m_lines.push_back(Line(850.0f, 350.0f, 950.0f, 450.0f));
+    m_lines.push_back(Line(450.0f, 600.0f, 400.0f, 500.0f));
+    m_lines.push_back(Line(500.0f, 450.0f, 650.0f, 550.0f));
+    m_lines.push_back(Line(700.0f, 200.0f, 850.0f, 300.0f));
 }
 
 World::~World()
 {
     delete m_player;
+    delete m_floortex;
+    delete m_floor;
+    delete m_shader;
+    delete m_rt;
 }
 
 void World::update(sf::Time deltaTime) {
@@ -53,6 +79,7 @@ void World::update(sf::Time deltaTime) {
 
 void World::draw(sf::RenderWindow *window) {
     // Draw the environment.
+    window->draw(*m_floor);
     for (unsigned int i=0; i < m_lines.size(); i++) {
         Line l = m_lines[i];
         //l.draw(window, sf::Color::White);
@@ -116,10 +143,10 @@ void World::draw(sf::RenderWindow *window) {
         }
     }
 
-    // Draw the points in order:
+    // Add points to VAO in rotational order.
     sf::VertexArray vao;
     vao.setPrimitiveType(sf::TriangleFan);
-    sf::Color lightColor(0x66, 0x66, 0x66);
+    sf::Color lightColor(0xff, 0xff, 0xff);
     vao.append(sf::Vertex(pp, lightColor));
     for (unsigned int i=0; i < points.size(); i++) {
         int index = i;
@@ -138,9 +165,25 @@ void World::draw(sf::RenderWindow *window) {
         } else {
             ip = pp + dir * VIEW_DISTANCE;
         }
+        float pct = (VIEW_DISTANCE - VectorUtils::distance(pp, ip)) / VIEW_DISTANCE;
+        if (pct < 0.0f) pct = 0.0f;
+        if (pct > 1.0f) pct = 1.0f;
+        unsigned char val = static_cast<unsigned char>(pct * 255.0f);
+        lightColor = sf::Color(val, val, val);
         vao.append(sf::Vertex(ip, lightColor));
     }
-    window->draw(vao);
+
+    // Draw points to separate render texture.
+    m_rt->clear(sf::Color::Black);
+    m_rt->draw(vao);
+    m_rt->display();
+
+    // Render texture to window as a sprite through the masking shader.
+    m_shader->setUniform("maskTexture", m_rt->getTexture());
+    m_shader->setUniform("invisibleColor", sf::Vector3f(0.0f, 0.0f, 0.0f));
+    m_shader->setUniform("visibleColor", sf::Vector3f(1.0f, 1.0f, 0.5f));
+    window->draw(sf::Sprite(m_rt->getTexture()), m_shader);
+    m_rt->clear(sf::Color(0xff, 0x00, 0x00)); // [TODO]: Figure out why this is required.
 
     // Draw the player.
     window->draw(*m_player);

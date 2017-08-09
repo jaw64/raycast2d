@@ -39,6 +39,10 @@ private:
 
     /// Instance variables.
     sf::CircleShape *m_player;
+    sf::Sprite *m_floor;
+    sf::Texture *m_floortex;
+    sf::Shader *m_shader;
+    sf::RenderTexture *m_rt;
     sf::Vector2f m_vel;
     sf::RenderWindow *m_window;
     std::vector<Line> m_lines;
